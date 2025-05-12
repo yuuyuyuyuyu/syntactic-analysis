@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>構文解析ツール</title>
+  <style>
+    body {
+      font-family: "Arial", sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      background: #fff;
+      padding: 30px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    #loading {
+      margin: 10px 0;
+      display: none;
+      color: #555;
+    }
+
+    #progress-bar {
+      height: 6px;
+      background: #ccc;
+      width: 100%;
+      border-radius: 5px;
+      overflow: hidden;
+      display: none;
+    }
+
+    #progress-bar-fill {
+      height: 100%;
+      background: #4CAF50;
+      width: 0%;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>構文解析ツール</h1>
+    <input type="text" id="sentenceInput" placeholder="例: She gave me a book." />
+    <button onclick="analyze()">解析する</button>
+
+    <div id="loading">解析中です...</div>
+    <div id="progress-bar"><div id="progress-bar-fill"></div></div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function analyze() {
+      const sentence = document.getElementById("sentenceInput").value.trim();
+      if (!sentence) {
+        alert("英文を入力してください。");
+        return;
+      }
+
+      const loading = document.getElementById("loading");
+      const progressBar = document.getElementById("progress-bar");
+      const progressFill = document.getElementById("progress-bar-fill");
+      const resultDiv = document.getElementById("result");
+
+      loading.style.display = "block";
+      progressBar.style.display = "block";
+      resultDiv.innerHTML = "";
+      progressFill.style.width = "0%";
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress = Math.min(progress + 10, 90);
+        progressFill.style.width = progress + "%";
+      }, 300);
+
+      fetch("/analyze", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({sentence})
+      })
+      .then(res => res.json())
+      .then(data => {
+        clearInterval(interval);
+        progressFill.style.width = "100%";
+        loading.style.display = "none";
+        if (data.result) {
+          resultDiv.innerHTML = "<pre>" + data.result + "</pre>"; // ← 修正済み
+        } else {
+          resultDiv.innerHTML = "<p>解析に失敗しました。</p>";
+        }
+      })
+      .catch(error => {
+        clearInterval(interval);
+        loading.style.display = "none";
+        progressBar.style.display = "none";
+        resultDiv.innerHTML = "<p>エラーが発生しました。</p>";
+        console.error(error);
+      });
+    }
+
+    document.getElementById("sentenceInput").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        analyze();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -86,55 +86,56 @@
   </div>
 
   <script>
-    function analyze() {
-      const sentence = document.getElementById("sentenceInput").value.trim();
-      if (!sentence) {
-        alert("英文を入力してください。");
-        return;
-      }
+ function analyze() {
+  const sentence = document.getElementById("sentenceInput").value.trim();
+  if (!sentence) {
+    alert("英文を入力してください。");
+    return;
+  }
 
-      const loading = document.getElementById("loading");
-      const progressBar = document.getElementById("progress-bar");
-      const progressFill = document.getElementById("progress-bar-fill");
-      const resultDiv = document.getElementById("result");
+  const loading = document.getElementById("loading");
+  const progressBar = document.getElementById("progress-bar");
+  const progressFill = document.getElementById("progress-bar-fill");
+  const resultDiv = document.getElementById("result");
 
-      // 初期化
-      loading.style.display = "block";
-      progressBar.style.display = "block";
-      resultDiv.innerHTML = "";
-      progressFill.style.width = "0%";
+  // 初期化
+  loading.style.display = "block";
+  progressBar.style.display = "block";
+  resultDiv.innerHTML = "";
+  progressFill.style.width = "0%";
 
-      // 疑似プログレスバー（実際はAPI処理を待つ）
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress = Math.min(progress + 10, 90);
-        progressFill.style.width = progress + "%";
-      }, 300);
+  // 疑似プログレスバー（実際はAPI処理を待つ）
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress = Math.min(progress + 10, 90);
+    progressFill.style.width = progress + "%";
+  }, 300);
 
-      fetch("/analyze", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({sentence})
-      })
-      .then(res => res.json())
-      .then(data => {
-        clearInterval(interval);
-        progressFill.style.width = "100%";
-        loading.style.display = "none";
-        if (data.result) {
-          resultDiv.innerHTML = `<pre>${data.result}</pre>`;
-        } else {
-          resultDiv.innerHTML = "<p>解析に失敗しました。</p>";
-        }
-      })
-      .catch(error => {
-        clearInterval(interval);
-        loading.style.display = "none";
-        progressBar.style.display = "none";
-        resultDiv.innerHTML = "<p>エラーが発生しました。</p>";
-        console.error(error);
-      });
+  fetch("/analyze", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({sentence})
+  })
+  .then(res => res.json())
+  .then(data => {
+    clearInterval(interval);
+    progressFill.style.width = "100%";
+    loading.style.display = "none";
+    if (data.result) {
+      resultDiv.innerHTML = "<pre>" + data.result + "</pre>";  // 修正箇所
+    } else {
+      resultDiv.innerHTML = "<p>解析に失敗しました。</p>";
     }
+  })
+  .catch(error => {
+    clearInterval(interval);
+    loading.style.display = "none";
+    progressBar.style.display = "none";
+    resultDiv.innerHTML = "<p>エラーが発生しました。</p>";
+    console.error(error);
+  });
+}
+
 
     // エンターキーでも実行可能に
     document.getElementById("sentenceInput").addEventListener("keydown", function (e) {

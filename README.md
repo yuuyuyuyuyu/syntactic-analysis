@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
+import traceback  # ← 追加！
 
 app = Flask(__name__)
 
@@ -56,9 +57,18 @@ def analyze():
 
     try:
         response = model.generate_content(prompt)
-        return jsonify({"result": response.text})
+        output = getattr(response, "text", None)
+
+        if not output:
+            return jsonify({"error": "Geminiからの応答が空でした。"}), 500
+
+        return jsonify({"result": output})
+    
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # ターミナルにエラー内容を出力
+        print("=== Geminiエラー発生 ===")
+        print(traceback.format_exc())
+        return jsonify({"error": "サーバーでエラーが発生しました。"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
